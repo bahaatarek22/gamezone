@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GameZone - متجر الألعاب الإلكترونية</title>
+    <title>PrimaStore - متجر الألعاب الإلكترونية</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,14 +16,14 @@
         <div class="header-container">
             <div class="logo">
                 <span class="logo-icon">🎮</span>
-                <span class="logo-text">Game<span class="logo-accent">Zone</span></span>
+                <span class="logo-text">prima<span class="logo-accent">store</span></span>
             </div>
 
             <nav class="nav-menu" id="navMenu">
                 <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
                 <a href="#" class="nav-link" data-page="products">المنتجات</a>
                 <a href="#" class="nav-link" data-page="orders">طلباتي</a>
-                <a href="#" class="nav-link" data-page="admin" id="adminLink">لوحة المدير</a>
+                <a href="#" class="nav-link hidden" data-page="admin" id="adminLink" style="display:none;">لوحة المدير</a>
             </nav>
 
             <div class="header-actions">
@@ -57,7 +57,7 @@
             <!-- Hero Section -->
             <div class="hero">
                 <div class="hero-content">
-                    <h1 class="hero-title">مرحباً بك في <span class="highlight">GameZone</span></h1>
+                    <h1 class="hero-title">مرحباً بك في <span class="highlight">primastore</span></h1>
                     <p class="hero-subtitle">أفضل destination لأجهزة الألعاب ومستلزماتها</p>
                     <div class="hero-buttons">
                         <button class="btn btn-primary" onclick="showPage('products')">تسوق الآن</button>
@@ -260,6 +260,33 @@
         </div>
     </div>
 
+    <!-- Reviews Modal -->
+    <div class="modal hidden" id="reviewsModal">
+        <div class="modal-content reviews-modal-content">
+            <div class="modal-header">
+                <h2>التقييمات والتعليقات</h2>
+                <button class="close-btn" onclick="closeReviews()">&times;</button>
+            </div>
+            <div class="reviews-product-info" id="reviewsProductInfo"></div>
+            <div class="reviews-form">
+                <h3>أضف تقييمك</h3>
+                <div class="rating-input">
+                    <span>التقييم:</span>
+                    <div class="stars-input" id="starsInput">
+                        <i class="far fa-star" data-star="1"></i>
+                        <i class="far fa-star" data-star="2"></i>
+                        <i class="far fa-star" data-star="3"></i>
+                        <i class="far fa-star" data-star="4"></i>
+                        <i class="far fa-star" data-star="5"></i>
+                    </div>
+                </div>
+                <textarea id="reviewText" placeholder="اكتب تعليقك هنا..."></textarea>
+                <button class="btn btn-primary" onclick="submitReview()">إرسال التقييم</button>
+            </div>
+            <div class="reviews-list" id="reviewsList"></div>
+        </div>
+    </div>
+
     <!-- Auth Modal -->
     <div class="modal hidden" id="authModal">
         <div class="modal-content auth-content">
@@ -300,7 +327,7 @@
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
-                <h3>GameZone</h3>
+                <h3>PrimaStore</h3>
                 <p>متورك الأول لأجهزة الألعاب ومستلزماتها</p>
                 <div class="social-links">
                     <a href="#"><i class="fab fa-facebook"></i></a>
@@ -318,7 +345,7 @@
             <div class="footer-section">
                 <h3>تواصل معنا</h3>
                 <p><i class="fas fa-phone"></i> +20 100 123 4567</p>
-                <p><i class="fas fa-envelope"></i> info@GameZone.com</p>
+                <p><i class="fas fa-envelope"></i> info@PrimaStore.com</p>
                 <p><i class="fas fa-map-marker"></i> القاهرة، مصر</p>
             </div>
             <div class="footer-section">
@@ -332,7 +359,7 @@
             </div>
         </div>
         <div class="footer-bottom">
-            <p>© 2025 GameZone. جميع الحقوق محفوظة</p>
+            <p>© 2025 PrimaStore. جميع الحقوق محفوظة</p>
         </div>
     </footer>
 

@@ -1,22 +1,25 @@
-/* GameZone - Styles */
+/* PrimaStore - Styles */
 :root {
     --primary: #00D9FF;
-    --secondary: #1A1A2E;
-    --accent: #FF6B35;
-    --background: #0F0F1A;
-    --surface: #16162A;
-    --surface-light: #1E1E3A;
-    --text-primary: #FFFFFF;
-    --text-secondary: #A0A0B0;
-    --success: #00FF88;
-    --error: #FF4757;
-    --gold: #FFD700;
+    --secondary: #12121a;
+    --accent: #00d4ff;
+    --accent-secondary: #7b2cbf;
+    --background: #0a0a0f;
+    --surface: #12121a;
+    --surface-light: #1a1a24;
+    --text-primary: #ffffff;
+    --text-secondary: #a0a0b0;
+    --success: #00ff88;
+    --warning: #ffaa00;
+    --error: #ff4757;
+    --gold: #ffd700;
+    --border: #2a2a3a;
     --neon-glow: 0 0 20px rgba(0, 217, 255, 0.5);
     --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     --border-radius: 12px;
     --border-radius-sm: 8px;
     --transition: 0.3s ease;
-    --gradient: linear-gradient(135deg, #00D9FF, #FF6B35);
+    --gradient: linear-gradient(135deg, #00d4ff, #7b2cbf);
 }
 
 * {
@@ -482,8 +485,42 @@ body {
     margin-bottom: 1rem;
 }
 
+.rating-count {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.rating-count:hover {
+    color: var(--primary);
+}
+
+.product-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.reviews-btn {
+    flex: 1;
+    padding: 0.8rem;
+    background: transparent;
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius-sm);
+    color: var(--primary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: 'Cairo', sans-serif;
+}
+
+.reviews-btn:hover {
+    background: var(--primary);
+    color: var(--background);
+}
+
 .add-to-cart {
-    width: 100%;
+    flex: 1;
     padding: 0.8rem;
     background: var(--gradient);
     border: none;
@@ -1121,6 +1158,136 @@ body {
     text-decoration: underline;
 }
 
+/* Reviews Modal */
+.reviews-modal-content {
+    max-width: 600px;
+}
+
+.reviews-product-info {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--surface-light);
+}
+
+.reviews-product-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reviews-product-image {
+    font-size: 3rem;
+    background: var(--surface-light);
+    padding: 1rem;
+    border-radius: var(--border-radius-sm);
+}
+
+.reviews-product-details .product-name {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.reviews-product-details .product-rating {
+    color: var(--gold);
+    font-size: 1.1rem;
+}
+
+.reviews-form {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--surface-light);
+}
+
+.reviews-form h3 {
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+}
+
+.rating-input {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rating-input span {
+    color: var(--text-secondary);
+}
+
+.stars-input {
+    display: flex;
+    gap: 0.3rem;
+    cursor: pointer;
+}
+
+.stars-input i {
+    font-size: 1.5rem;
+    color: var(--gold);
+    transition: var(--transition);
+}
+
+.stars-input i:hover {
+    transform: scale(1.2);
+}
+
+.reviews-form textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 1rem;
+    background: var(--surface-light);
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    border-radius: var(--border-radius-sm);
+    color: var(--text-primary);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    resize: vertical;
+    margin-bottom: 1rem;
+}
+
+.reviews-form textarea:focus {
+    border-color: var(--primary);
+}
+
+.reviews-list {
+    padding: 1.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.review-item {
+    background: var(--surface-light);
+    padding: 1rem;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 1rem;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.review-user {
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.review-rating {
+    color: var(--gold);
+}
+
+.review-text {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.review-date {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
 /* Notification */
 .notification {
     position: fixed;
@@ -1310,7 +1477,57 @@ body {
     }
 
     .products-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    .product-card {
+        min-width: 0;
+    }
+
+    .product-image {
+        height: 120px;
+        font-size: 2.5rem;
+    }
+
+    .product-info {
+        padding: 0.8rem;
+    }
+
+    .product-name {
+        font-size: 0.9rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-category {
+        font-size: 0.7rem;
+    }
+
+    .product-price {
+        font-size: 1rem;
+    }
+
+    .product-rating {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .rating-count {
+        display: none;
+    }
+
+    .product-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .add-to-cart,
+    .reviews-btn {
+        padding: 0.6rem;
+        font-size: 0.8rem;
     }
 
     .btn {
