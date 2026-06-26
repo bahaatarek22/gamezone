@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameZone - متجر الألعاب الإلكترونية</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <span class="logo-icon">🎮</span>
+                <span class="logo-text">Game<span class="logo-accent">Zone</span></span>
+            </div>
+
+            <nav class="nav-menu" id="navMenu">
+                <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
+                <a href="#" class="nav-link" data-page="products">المنتجات</a>
+                <a href="#" class="nav-link" data-page="orders">طلباتي</a>
+                <a href="#" class="nav-link" data-page="admin" id="adminLink">لوحة المدير</a>
+            </nav>
+
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" placeholder="بحث..." id="searchInput">
+                    <button class="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <button class="icon-btn" id="cartBtn">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge" id="cartBadge">0</span>
+                </button>
+                <button class="icon-btn" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="icon-btn" id="userBtn">
+                    <i class="fas fa-user"></i>
+                </button>
+                <button class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Home Page -->
+        <section class="page home-page" id="homePage">
+            <!-- Hero Section -->
+            <div class="hero">
+                <div class="hero-content">
+                    <h1 class="hero-title">مرحباً بك في <span class="highlight">GameZone</span></h1>
+                    <p class="hero-subtitle">أفضل destination لأجهزة الألعاب ومستلزماتها</p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary" onclick="showPage('products')">تسوق الآن</button>
+                        <button class="btn btn-secondary" onclick="showPage('orders')">تتبع طلبك</button>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="glow-circle"></div>
+                    <div class="gamepad-icon">🎮</div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <section class="categories">
+                <h2 class="section-title">أقسام المتجر</h2>
+                <div class="categories-grid">
+                    <div class="category-card" onclick="filterCategory('pc')">
+                        <div class="category-icon">💻</div>
+                        <h3>PC Gaming</h3>
+                        <p>لوحات مفاتيح، فأرات،سماعات</p>
+                    </div>
+                    <div class="category-card" onclick="filterCategory('mobile')">
+                        <div class="category-icon">📱</div>
+                        <h3>Mobile Gaming</h3>
+                        <p>مبردات،ジョイスティック</p>
+                    </div>
+                    <div class="category-card" onclick="filterCategory('cables')">
+                        <div class="category-icon">🔌</div>
+                        <h3>كابلات وشواحن</h3>
+                        <p>USB-C, HDMI, شواحن</p>
+                    </div>
+                    <div class="category-card" onclick="filterCategory('audio')">
+                        <div class="category-icon">🎧</div>
+                        <h3>صوتيات</h3>
+                        <p>سماعات محيطية, مايكروفونات</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Products -->
+            <section class="featured">
+                <h2 class="section-title">أفضل المنتجات</h2>
+                <div class="products-grid" id="featuredProducts"></div>
+            </section>
+
+            <!-- New Arrivals -->
+            <section class="new-arrivals">
+                <h2 class="section-title">وصل حديثاً</h2>
+                <div class="products-grid" id="newProducts"></div>
+            </section>
+        </section>
+
+        <!-- Products Page -->
+        <section class="page products-page hidden" id="productsPage">
+            <div class="products-header">
+                <h1 class="page-title">المنتجات</h1>
+                <div class="products-filter">
+                    <select id="categoryFilter">
+                        <option value="all">جميع الأقسام</option>
+                        <option value="pc">PC Gaming</option>
+                        <option value="mobile">Mobile Gaming</option>
+                        <option value="cables">كابلات وشواحن</option>
+                        <option value="audio">صوتيات</option>
+                    </select>
+                    <select id="priceSort">
+                        <option value="default">الترتيب</option>
+                        <option value="price-low">الأقل سعراً</option>
+                        <option value="price-high">الأغلى سعراً</option>
+                        <option value="new">الأحدث</option>
+                    </select>
+                </div>
+            </div>
+            <div class="products-grid" id="allProducts"></div>
+        </section>
+
+        <!-- Orders Page -->
+        <section class="page orders-page hidden" id="ordersPage">
+            <div class="track-order">
+                <h1 class="page-title">تتبع طلبك</h1>
+                <div class="track-form">
+                    <input type="text" id="orderInput" placeholder="أدخل رقم الطلب">
+                    <button class="btn btn-primary" onclick="trackOrder()">تتبع</button>
+                </div>
+                <div class="order-status hidden" id="orderStatus">
+                    <div class="order-info">
+                        <h3>رقم الطلب: <span id="displayOrderId"></span></h3>
+                        <p>الحالة: <span class="status-badge" id="orderStatusBadge"></span></p>
+                    </div>
+                    <div class="order-timeline">
+                        <div class="timeline-item completed">
+                            <i class="fas fa-check-circle"></i>
+                            <span>تم الاستلام</span>
+                        </div>
+                        <div class="timeline-item">
+                            <i class="fas fa-box"></i>
+                            <span>قيد التجهيز</span>
+                        </div>
+                        <div class="timeline-item">
+                            <i class="fas fa-truck"></i>
+                            <span>في الطريق</span>
+                        </div>
+                        <div class="timeline-item">
+                            <i class="fas fa-home"></i>
+                            <span>تم التوصيل</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Dashboard -->
+        <section class="page admin-page hidden" id="adminPage">
+            <div class="admin-header">
+                <h1 class="page-title">لوحة تحكم المدير</h1>
+                <div class="admin-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-shopping-bag"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalOrders">0</span>
+                            <span class="stat-label">إجمالي الطلبات</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-dollar-sign"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalRevenue">$0</span>
+                            <span class="stat-label">الإيرادات</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-boxes"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalProducts">0</span>
+                            <span class="stat-label">المنتجات</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-users"></i>
+                        <div class="stat-info">
+                            <span class="stat-value" id="totalUsers">0</span>
+                            <span class="stat-label">المستخدمون</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="tab-btn active" data-tab="products-management">إدارة المنتجات</button>
+                <button class="tab-btn" data-tab="orders-management">إدارة الطلبات</button>
+            </div>
+
+            <!-- Products Management -->
+            <div class="admin-content" id="productsManagement">
+                <div class="add-product-form">
+                    <h3>إضافة منتج جديد</h3>
+                    <div class="form-grid">
+                        <input type="text" id="productName" placeholder="اسم المنتج">
+                        <input type="number" id="productPrice" placeholder="السعر">
+                        <select id="productCategory">
+                            <option value="pc">PC Gaming</option>
+                            <option value="mobile">Mobile Gaming</option>
+                            <option value="cables">كابلات وشواحن</option>
+                            <option value="audio">صوتيات</option>
+                        </select>
+                        <input type="text" id="productImage" placeholder="رابط الصورة">
+                        <input type="number" id="productStock" placeholder="المخزون">
+                        <textarea id="productDesc" placeholder="الوصف"></textarea>
+                        <button class="btn btn-primary" onclick="addProduct()">إضافة</button>
+                    </div>
+                </div>
+                <div class="admin-products-list" id="adminProductsList"></div>
+            </div>
+
+            <!-- Orders Management -->
+            <div class="admin-content hidden" id="ordersManagement">
+                <div class="admin-orders-list" id="adminOrdersList"></div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cart Modal -->
+    <div class="modal hidden" id="cartModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>سلة المشتريات</h2>
+                <button class="close-btn" onclick="closeCart()">&times;</button>
+            </div>
+            <div class="cart-items" id="cartItems"></div>
+            <div class="cart-footer">
+                <div class="coupon-input">
+                    <input type="text" id="couponCode" placeholder="كود الخصم">
+                    <button onclick="applyCoupon()">تطبيق</button>
+                </div>
+                <div class="cart-total">
+                    <span>المجموع:</span>
+                    <span id="cartTotal">$0</span>
+                </div>
+                <button class="btn btn-primary btn-full" onclick="checkout()">إتمام الشراء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal hidden" id="authModal">
+        <div class="modal-content auth-content">
+            <div class="modal-header">
+                <h2 id="authTitle">تسجيل الدخول</h2>
+                <button class="close-btn" onclick="closeAuth()">&times;</button>
+            </div>
+            <div class="auth-forms">
+                <form id="loginForm" class="auth-form">
+                    <input type="email" placeholder="البريد الإلكتروني" required>
+                    <input type="password" placeholder="كلمة المرور" required>
+                    <div class="form-options">
+                        <label><input type="checkbox"> تذكرني</label>
+                        <a href="#" onclick="showForgotPassword()">نسيت كلمة المرور؟</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full">دخول</button>
+                    <p class="auth-switch">ليس لديك حساب؟ <a href="#" onclick="switchAuthMode()">إنشاء حساب</a></p>
+                </form>
+                <form id="registerForm" class="auth-form hidden">
+                    <input type="text" placeholder="الاسم الكامل" required>
+                    <input type="email" placeholder="البريد الإلكتروني" required>
+                    <input type="password" placeholder="كلمة المرور" required>
+                    <input type="tel" placeholder="رقم الهاتف" required>
+                    <button type="submit" class="btn btn-primary btn-full">إنشاء حساب</button>
+                    <p class="auth-switch">لديك حساب؟ <a href="#" onclick="switchAuthMode()">تسجيل دخول</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification hidden" id="notification">
+        <span id="notificationText"></span>
+        <button onclick="hideNotification()">&times;</button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>GameZone</h3>
+                <p>متورك الأول لأجهزة الألعاب ومستلزماتها</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h3>روابط سريعة</h3>
+                <a href="#" onclick="showPage('home')">الرئيسية</a>
+                <a href="#" onclick="showPage('products')">المنتجات</a>
+                <a href="#" onclick="showPage('orders')">طلباتي</a>
+            </div>
+            <div class="footer-section">
+                <h3>تواصل معنا</h3>
+                <p><i class="fas fa-phone"></i> +20 100 123 4567</p>
+                <p><i class="fas fa-envelope"></i> info@GameZone.com</p>
+                <p><i class="fas fa-map-marker"></i> القاهرة، مصر</p>
+            </div>
+            <div class="footer-section">
+                <h3>طرق الدفع</h3>
+                <div class="payment-methods">
+                    <i class="fab fa-cc-visa"></i>
+                    <i class="fab fa-cc-mastercard"></i>
+                    <i class="fab fa-cc-paypal"></i>
+                    <i class="fas fa-wallet"></i>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 GameZone. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
