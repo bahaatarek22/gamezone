@@ -134,7 +134,7 @@ function handleFirebaseError(error) {
 if (typeof window.firebaseAuth !== 'undefined') {
     window.firebaseAuth.onAuthStateChanged(window.firebaseAuth.auth, function(user) {
         if (user) {
-            console.log('Firebase user:', user.email);
+            // User logged in via Firebase
         }
     });
 }
@@ -1043,8 +1043,20 @@ function handleLogin(e) {
         return emailMatch || phoneMatch || nameMatch;
     });
 
+    // Check if this account was previously deleted
+    var deletedAccounts = JSON.parse(localStorage.getItem('gamezone_deleted_accounts')) || [];
+    var wasDeleted = deletedAccounts.some(function(d) {
+        var emailMatch = d.email && d.email.toLowerCase() === identifierClean.toLowerCase();
+        var phoneMatch = d.phone && d.phone === identifierClean;
+        return emailMatch || phoneMatch;
+    });
+
     if (!existingUser) {
-        showNotification('الحساب غير موجود. يرجى إنشاء حساب أولاً', true);
+        if (wasDeleted) {
+            showNotification('هذا الحساب كان قد حذف سابقاً. يمكنك إنشاء حساب جديد', false);
+        } else {
+            showNotification('الحساب غير موجود. يرجى إنشاء حساب أولاً', true);
+        }
         switchAuthMode();
         return;
     }

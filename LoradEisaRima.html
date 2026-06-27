@@ -355,7 +355,7 @@
         })();
 
         // Log access
-        console.log('%c🔒 Dashboard Access Granted', 'color: #00ff88; font-size: 16px;');
+        // Dashboard loaded
     </script>
 
     <header class="admin-header">
@@ -657,6 +657,18 @@
 
         function deleteUser(index) {
             if (confirm('هل أنت متأكد من حذف هذا المستخدم؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+                var deletedUser = users[index];
+                // Store deleted account info for reference
+                var deletedAccounts = JSON.parse(localStorage.getItem('gamezone_deleted_accounts')) || [];
+                deletedAccounts.push({
+                    email: deletedUser.email,
+                    phone: deletedUser.phone,
+                    name: deletedUser.name,
+                    deletedAt: new Date().toISOString()
+                });
+                localStorage.setItem('gamezone_deleted_accounts', JSON.stringify(deletedAccounts));
+
+                // Remove from users array
                 users.splice(index, 1);
                 localStorage.setItem('gamezone_users', JSON.stringify(users));
                 renderUsers();

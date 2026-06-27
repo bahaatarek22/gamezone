@@ -83,10 +83,9 @@ body {
 }
 
 .logo-accent {
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #00d4ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.6);
 }
 
 @keyframes pulse {
@@ -273,10 +272,10 @@ body {
 }
 
 .hero-title .highlight {
-    background: var(--gradient);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: #00d4ff !important;
+    -webkit-text-fill-color: #00d4ff !important;
+    font-weight: 800;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.8);
 }
 
 .hero-subtitle {
