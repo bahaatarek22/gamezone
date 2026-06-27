@@ -9,6 +9,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase config - إعدادات Firebase الخاصة بك
+        const firebaseConfig = {
+            apiKey: "AIzaSyAQnrOcHxFJ24Mn5u2dnl6wjJfXy1sam3k",
+            authDomain: "flutter-ai-playground-83c5e.firebaseapp.com",
+            projectId: "flutter-ai-playground-83c5e",
+            storageBucket: "flutter-ai-playground-83c5e.firebasestorage.app",
+            messagingSenderId: "1005854540538",
+            appId: "1:1005854540538:web:80c19199593fcb13f17f43"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Export for use in app.js
+        window.firebaseAuth = { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendEmailVerification, signOut, onAuthStateChanged };
+    </script>
 </head>
 <body>
     <!-- Header -->
@@ -135,6 +157,7 @@
 
         <!-- Orders Page -->
         <section class="page orders-page hidden" id="ordersPage">
+            <!-- تتبع طلب by رقم -->
             <div class="track-order">
                 <h1 class="page-title">تتبع طلبك</h1>
                 <div class="track-form">
@@ -164,6 +187,14 @@
                             <span>تم التوصيل</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- طلباتي السابقة -->
+            <div class="my-orders-section">
+                <h2 class="section-title">طلباتي</h2>
+                <div class="my-orders-list" id="myOrdersList">
+                    <!-- سيتم تعبئتها بواسطة JavaScript -->
                 </div>
             </div>
         </section>
@@ -251,8 +282,29 @@
                     <input type="text" id="couponCode" placeholder="كود الخصم">
                     <button onclick="applyCoupon()">تطبيق</button>
                 </div>
+
+                <!-- بيانات العميل -->
+                <div class="checkout-form" id="checkoutForm">
+                    <h3 style="margin: 1rem 0 0.5rem; color: var(--primary);">بيانات التوصيل</h3>
+                    <input type="text" id="customerName" placeholder="الاسم الكامل" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.8rem; background: var(--surface-light); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; color: var(--text-primary);">
+                    <input type="tel" id="customerPhone" placeholder="+20 10 xxxx xxxx" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.8rem; background: var(--surface-light); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; color: var(--text-primary);">
+                    <input type="text" id="customerAddress" placeholder="العنوان بالتفصيل" required style="width: 100%; margin-bottom: 0.5rem; padding: 0.8rem; background: var(--surface-light); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; color: var(--text-primary);">
+
+                    <h3 style="margin: 1rem 0 0.5rem; color: var(--primary);">طريقة الدفع</h3>
+                    <select id="paymentMethod" onchange="togglePaymentImage()" style="width: 100%; padding: 0.8rem; background: var(--surface-light); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; color: var(--text-primary); margin-bottom: 1rem;">
+                        <option value="cod">الدفع عند الاستلام</option>
+                        <option value="wallet">المحفظة الإلكترونية (+20 10 55754165)</option>
+                    </select>
+
+                    <!-- رفع صورة الدفع -->
+                    <div id="paymentImageSection" style="display: none; margin-bottom: 1rem;">
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">حوّل المبلغ على رقم: +20 10 55754165 ثم ارفع صورة التحويل</p>
+                        <input type="file" id="paymentImage" accept="image/*" style="width: 100%; padding: 0.8rem; background: var(--surface-light); border: 1px dashed rgba(0, 217, 255, 0.5); border-radius: 8px; color: var(--text-primary);">
+                    </div>
+                </div>
+
                 <div class="cart-total">
-                    <span>المجموع:</span>
+                    <span>المج��وع:</span>
                     <span id="cartTotal">$0</span>
                 </div>
                 <button class="btn btn-primary btn-full" onclick="checkout()">إتمام الشراء</button>
@@ -295,21 +347,24 @@
                 <button class="close-btn" onclick="closeAuth()">&times;</button>
             </div>
             <div class="auth-forms">
+                <!-- Login Form - Simple -->
                 <form id="loginForm" class="auth-form">
-                    <input type="email" placeholder="البريد الإلكتروني" required>
-                    <input type="password" placeholder="كلمة المرور" required>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">سجّل دخول باستخدام البريد الإلكتروني أو رقم الهاتف أو اسم المستخدم</p>
+                    <input type="text" id="loginIdentifier" placeholder="البريد الإلكتروني / رقم الهاتف / اسم المستخدم" required>
+                    <input type="password" id="loginPassword" placeholder="كلمة المرور" required>
                     <div class="form-options">
-                        <label><input type="checkbox"> تذكرني</label>
-                        <a href="#" onclick="showForgotPassword()">نسيت كلمة المرور؟</a>
+                        <label><input type="checkbox" id="rememberMe"> تذكرني</label>
                     </div>
                     <button type="submit" class="btn btn-primary btn-full">دخول</button>
                     <p class="auth-switch">ليس لديك حساب؟ <a href="#" onclick="switchAuthMode()">إنشاء حساب</a></p>
                 </form>
+
+                <!-- Register Form - Simple -->
                 <form id="registerForm" class="auth-form hidden">
-                    <input type="text" placeholder="الاسم الكامل" required>
-                    <input type="email" placeholder="البريد الإلكتروني" required>
-                    <input type="password" placeholder="كلمة المرور" required>
-                    <input type="tel" placeholder="رقم الهاتف" required>
+                    <input type="text" id="regName" placeholder="اسم المستخدم" required>
+                    <input type="email" id="regEmail" placeholder="البريد الإلكتروني (اختياري)">
+                    <input type="tel" id="regPhone" placeholder="رقم الهاتف (اختياري)">
+                    <input type="password" id="regPassword" placeholder="كلمة المرور (6 أحرف على الأقل)" required minlength="6">
                     <button type="submit" class="btn btn-primary btn-full">إنشاء حساب</button>
                     <p class="auth-switch">لديك حساب؟ <a href="#" onclick="switchAuthMode()">تسجيل دخول</a></p>
                 </form>
@@ -344,8 +399,8 @@
             </div>
             <div class="footer-section">
                 <h3>تواصل معنا</h3>
-                <p><i class="fas fa-phone"></i> +20 100 123 4567</p>
-                <p><i class="fas fa-envelope"></i> info@PrimaStore.com</p>
+                <p><i class="fab fa-whatsapp"></i> <a href="https://wa.me/201055754165" style="color: #25d366; text-decoration: none;" target="_blank">+20 10 55754165</a></p>
+                <p><i class="fas fa-phone"></i> <a href="tel:+201055754165" style="color: var(--text-secondary); text-decoration: none;">+20 10 55754165</a></p>
                 <p><i class="fas fa-map-marker"></i> القاهرة، مصر</p>
             </div>
             <div class="footer-section">

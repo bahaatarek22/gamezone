@@ -1,5 +1,144 @@
 // PrimaStore - Application Logic
 
+// ============================================
+// Firebase Authentication
+// ============================================
+
+// Check if Firebase is configured
+function isFirebaseReady() {
+    return typeof window.firebaseAuth !== 'undefined';
+}
+
+function getFirebaseConfig() {
+    return {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+}
+
+// Firebase Login
+async function firebaseLogin(email, password) {
+    if (!isFirebaseReady()) {
+        showNotification('Firebase غير مُهيأ. يرجى إعداد Firebase أولاً', true);
+        return false;
+    }
+
+    try {
+        showNotification('جاري تسجيل الدخول...', false);
+        const userCredential = await window.firebaseAuth.signInWithEmailAndPassword(window.firebaseAuth.auth, email, password);
+        const user = userCredential.user;
+
+        if (!user.emailVerified) {
+            showNotification('يرجى التحقق من بريدك الإلكتروني أولاً', true);
+            await window.firebaseAuth.signOut(window.firebaseAuth.auth);
+            return false;
+        }
+
+        currentUser = {
+            email: user.email,
+            name: user.displayName || user.email.split('@')[0],
+            uid: user.uid,
+            verified: user.emailVerified,
+            loginMethod: 'firebase'
+        };
+        saveToStorage();
+        updateUIForLoggedInUser();
+        closeAuth();
+        showPage('home');
+        showNotification('مرحباً، ' + currentUser.name + '!');
+        return true;
+    } catch (error) {
+        handleFirebaseError(error);
+        return false;
+    }
+}
+
+// Firebase Register
+async function firebaseRegister(name, email, password, phone) {
+    if (!isFirebaseReady()) {
+        showNotification('Firebase غير مُهيأ. يرجى إعداد Firebase أولاً', true);
+        return false;
+    }
+
+    try {
+        showNotification('جاري إنشاء الحساب...', false);
+        const userCredential = await window.firebaseAuth.createUserWithEmailAndPassword(window.firebaseAuth.auth, email, password);
+
+        await window.firebaseAuth.sendEmailVerification(window.firebaseAuth.auth.currentUser);
+
+        currentUser = {
+            name: name,
+            email: email,
+            phone: phone,
+            uid: userCredential.user.uid,
+            verified: false,
+            loginMethod: 'firebase',
+            createdAt: new Date().toISOString()
+        };
+        saveToStorage();
+        updateUIForLoggedInUser();
+        closeAuth();
+        showPage('home');
+        showNotification('تم إرسال رابط التحقق إلى بريدك الإلكتروني');
+        return true;
+    } catch (error) {
+        handleFirebaseError(error);
+        return false;
+    }
+}
+
+// Firebase Logout
+async function firebaseLogout() {
+    if (!isFirebaseReady()) return;
+
+    try {
+        await window.firebaseAuth.signOut(window.firebaseAuth.auth);
+        currentUser = null;
+        localStorage.removeItem('gamezone_currentUser');
+        updateUIForLoggedInUser();
+        showNotification('تم تسجيل الخروج بنجاح');
+        showPage('home');
+    } catch (error) {
+        showNotification('Error: ' + error.message, true);
+    }
+}
+
+// Firebase Logout (alias)
+function firebaseSignOut() {
+    firebaseLogout();
+}
+
+// Handle Firebase Errors
+function handleFirebaseError(error) {
+    const errorCodes = {
+        'auth/email-already-in-use': 'البريد الإلكتروني مُستخدم بالفعل',
+        'auth/invalid-email': 'بريد إلكتروني غير صالح',
+        'auth/operation-not-allowed': 'العملية غير مسموحة',
+        'auth/weak-password': 'كلمة مرور ضعيفة',
+        'auth/user-disabled': 'الحساب معطل',
+        'auth/user-not-found': 'المستخدم غير موجود',
+        'auth/wrong-password': 'كلمة مرور خاطئة',
+        'auth/too-many-requests': 'تجاوزت الحد المسموح. يرجى المحاولة لاحقاً',
+        'auth/network-request-failed': 'خطأ في الاتصال'
+    };
+
+    const message = errorCodes[error.code] || error.message;
+    showNotification(message, true);
+}
+
+// Check auth state
+if (typeof window.firebaseAuth !== 'undefined') {
+    window.firebaseAuth.onAuthStateChanged(window.firebaseAuth.auth, function(user) {
+        if (user) {
+            console.log('Firebase user:', user.email);
+        }
+    });
+}
+
 // Data Store
 let products = [
     { id: 1, name: 'لوحة مفاتيح RGB', category: 'pc', price: 89.99, oldPrice: 129.99, image: '⌨️', rating: 5, stock: 50, description: 'لوحة مفاتيح ميكانيكية بإضاءة RGB', badge: 'خصم 30%' },
@@ -25,6 +164,70 @@ let orders = [
 let users = [];
 let currentUser = null;
 let isDarkMode = true;
+
+// Session management
+function loadFromStorage() {
+    const savedProducts = localStorage.getItem('gamezone_products');
+    const savedCart = localStorage.getItem('gamezone_cart');
+    const savedOrders = localStorage.getItem('gamezone_orders');
+    const savedUsers = localStorage.getItem('gamezone_users');
+    const savedCurrentUser = localStorage.getItem('gamezone_currentUser');
+
+    if (savedProducts) products = JSON.parse(savedProducts);
+    if (savedCart) cart = JSON.parse(savedCart);
+    if (savedOrders) orders = JSON.parse(savedOrders);
+    if (savedUsers) users = JSON.parse(savedUsers);
+    if (savedCurrentUser) {
+        currentUser = JSON.parse(savedCurrentUser);
+        updateUIForLoggedInUser();
+    }
+}
+
+function saveToStorage() {
+    localStorage.setItem('gamezone_products', JSON.stringify(products));
+    localStorage.setItem('gamezone_cart', JSON.stringify(cart));
+    localStorage.setItem('gamezone_orders', JSON.stringify(orders));
+    localStorage.setItem('gamezone_users', JSON.stringify(users));
+    if (currentUser) {
+        localStorage.setItem('gamezone_currentUser', JSON.stringify(currentUser));
+    } else {
+        localStorage.removeItem('gamezone_currentUser');
+    }
+}
+
+function updateUIForLoggedInUser() {
+    const userBtn = document.getElementById('userBtn');
+    if (!userBtn) return;
+
+    if (currentUser) {
+        // Update to show logout button
+        userBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+        userBtn.onclick = logout;
+        userBtn.title = 'خروج';
+    } else {
+        // Show login button
+        userBtn.innerHTML = '<i class="fas fa-user"></i>';
+        userBtn.onclick = openAuth;
+        userBtn.title = 'دخول';
+    }
+}
+
+function logout() {
+    if (!confirm('هل أنت متأكد من تسجيل الخروج؟')) return;
+
+    // Use Firebase logout if available
+    if (isFirebaseReady()) {
+        firebaseLogout();
+        return;
+    }
+
+    // Local logout
+    currentUser = null;
+    localStorage.removeItem('gamezone_currentUser');
+    updateUIForLoggedInUser();
+    showNotification('تم تسجيل الخروج بنجاح');
+    showPage('home');
+}
 let currentProductId = null;
 let selectedRating = 0;
 let reviews = [
@@ -54,26 +257,8 @@ function initializeApp() {
     renderAdminProducts();
     renderAdminOrders();
     updateStats();
+    updateUIForLoggedInUser();
     setupEventListeners();
-}
-
-function loadFromStorage() {
-    const savedProducts = localStorage.getItem('gamezone_products');
-    const savedCart = localStorage.getItem('gamezone_cart');
-    const savedOrders = localStorage.getItem('gamezone_orders');
-    const savedUsers = localStorage.getItem('gamezone_users');
-
-    if (savedProducts) products = JSON.parse(savedProducts);
-    if (savedCart) cart = JSON.parse(savedCart);
-    if (savedOrders) orders = JSON.parse(savedOrders);
-    if (savedUsers) users = JSON.parse(savedUsers);
-}
-
-function saveToStorage() {
-    localStorage.setItem('gamezone_products', JSON.stringify(products));
-    localStorage.setItem('gamezone_cart', JSON.stringify(cart));
-    localStorage.setItem('gamezone_orders', JSON.stringify(orders));
-    localStorage.setItem('gamezone_users', JSON.stringify(users));
 }
 
 // Event Listeners
@@ -175,6 +360,11 @@ function showPage(pageName) {
     const activeLink = document.querySelector('[data-page="' + pageName + '"]');
     if (activeLink) {
         activeLink.classList.add('active');
+    }
+
+    // Render my orders when visiting orders page
+    if (pageName === 'orders') {
+        renderMyOrders();
     }
 
     window.scrollTo(0, 0);
@@ -333,31 +523,127 @@ function applyCoupon() {
     }
 }
 
+// إظهار/إخفاء خيار رفع صورة الدفع
+function togglePaymentImage() {
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const imageSection = document.getElementById('paymentImageSection');
+    if (imageSection) {
+        if (paymentMethod === 'wallet') {
+            imageSection.style.display = 'block';
+        } else {
+            imageSection.style.display = 'none';
+        }
+    }
+}
+
 function checkout() {
     if (cart.length === 0) {
         showNotification('السلة فارغة', true);
         return;
     }
 
+    // التحقق من بيانات العميل
+    const customerName = document.getElementById('customerName').value.trim();
+    const customerPhone = document.getElementById('customerPhone').value.trim();
+    const customerAddress = document.getElementById('customerAddress').value.trim();
+    const paymentMethod = document.getElementById('paymentMethod').value;
+
+    if (!customerName || !customerPhone || !customerAddress) {
+        showNotification('يرجى إكمال بيانات التوصيل', true);
+        return;
+    }
+
+    // التحقق من رقم الهاتف
+    var phonePattern = /^(010|011|012|015)\d{8}$/;
+    var phoneClean = customerPhone.replace(/[\s\-]/g, '');
+    if (!phonePattern.test(phoneClean)) {
+        showNotification('يرجى إدخال رقم هاتف مصري صحيح (010/011/012/015xxxxxxxx)', true);
+        return;
+    }
+
     const orderId = 'ORD' + Math.random().toString(36).substr(2, 5).toUpperCase();
     const total = cart.reduce(function(sum, item) { return sum + (item.price * item.quantity); }, 0);
 
-    orders.push({
-        id: orderId,
-        customer: currentUser ? currentUser.name : 'ضيف',
-        items: cart.map(function(item) { return item.name; }),
-        total: total,
-        status: 'processing'
-    });
+    var paymentText = 'الدفع عند الاستلام';
+    var paymentImage = null;
 
-    cart = [];
-    saveToStorage();
-    updateCartBadge();
-    closeCart();
-    showNotification('تم تقديم الطلب رقم: ' + orderId);
+    if (paymentMethod === 'wallet') {
+        paymentText = 'المحفظة الإلكترونية';
+        var imageInput = document.getElementById('paymentImage');
+        if (imageInput && imageInput.files && imageInput.files[0]) {
+            // تحويل الصورة إلى base64
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                paymentImage = e.target.result;
+                saveOrderWithImage();
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+            return;
+        } else {
+            showNotification('يرجى رفع صورة التحويل', true);
+            return;
+        }
+    }
+
+    saveOrder();
+
+    function saveOrderWithImage() {
+        orders.push({
+            id: orderId,
+            customer: customerName,
+            phone: customerPhone,
+            address: customerAddress,
+            payment: paymentText,
+            paymentImage: paymentImage,
+            items: cart.map(function(item) { return item.name + ' x' + item.quantity; }),
+            total: total,
+            status: 'processing',
+            date: new Date().toISOString()
+        });
+        finishOrder();
+    }
+
+    function saveOrder() {
+        orders.push({
+            id: orderId,
+            customer: customerName,
+            phone: customerPhone,
+            address: customerAddress,
+            payment: paymentText,
+            items: cart.map(function(item) { return item.name + ' x' + item.quantity; }),
+            total: total,
+            status: 'processing',
+            date: new Date().toISOString()
+        });
+        finishOrder();
+    }
+
+    function finishOrder() {
+        cart = [];
+        saveToStorage();
+        updateCartBadge();
+        closeCart();
+
+        // إظهار رقم الطلب مع تفاصيل الدفع
+        showNotification('تم تقديم الطلب رقم: ' + orderId);
+
+        // عرض رقم الطلب في notification بشكل واضح
+        var notificationEl = document.getElementById('notification');
+        var notificationTextEl = document.getElementById('notificationText');
+        if (notificationEl) {
+            notificationEl.style.height = 'auto';
+            notificationEl.style.padding = '1.5rem';
+        }
+
+        // توجيه المستخدم لصفحة تتبع الطلب مع إظهار رقم الطلب تلقائياً
+        document.getElementById('orderInput').value = orderId;
+        showPage('orders');
+        trackOrder();
+    }
 }
 
 // Order Tracking
+
 function trackOrder() {
     const orderId = document.getElementById('orderInput').value;
     const order = orders.find(function(o) { return o.id === orderId; });
@@ -380,9 +666,62 @@ function getStatusText(status) {
     const texts = {
         'processing': 'قيد التجهيز',
         'shipped': 'في الطريق',
-        'delivered': 'تم التوصيل'
+        'delivered': 'تم التوصيل',
+        'rejected': 'مرفوض'
     };
     return texts[status] || status;
+}
+
+// Render My Orders
+function renderMyOrders() {
+    var container = document.getElementById('myOrdersList');
+    if (!container) return;
+
+    // Get orders for current user (if logged in)
+    var userOrders = orders;
+    if (currentUser) {
+        userOrders = orders.filter(function(o) {
+            return o.customer === currentUser.name ||
+                   o.phone === currentUser.phone ||
+                   (currentUser.email && o.customer && o.customer.toLowerCase().includes(currentUser.name.toLowerCase()));
+        });
+    }
+
+    // Sort by date (newest first)
+    userOrders.sort(function(a, b) {
+        return new Date(b.date || 0) - new Date(a.date || 0);
+    });
+
+    if (userOrders.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">لا توجد طلبات سابقة</p>';
+        return;
+    }
+
+    container.innerHTML = userOrders.map(function(order) {
+        var statusClass = order.status === 'delivered' ? 'delivered' :
+                      order.status === 'shipped' ? 'shipped' :
+                      order.status === 'rejected' ? 'rejected' : 'processing';
+        var dateText = order.date ? new Date(order.date).toLocaleDateString('ar-EG') : '';
+
+        return '<div class="my-order-item" onclick="showOrderDetails(\'' + order.id + '\')">' +
+            '<div class="my-order-header">' +
+            '<div class="my-order-id">' + order.id + '</div>' +
+            '<div class="my-order-status ' + statusClass + '">' + getStatusText(order.status) + '</div>' +
+            '</div>' +
+            '<div class="my-order-items">' + order.items.slice(0, 2).join(', ') + (order.items.length > 2 ? '...' : '') + '</div>' +
+            '<div class="my-order-footer">' +
+            '<div class="my-order-date">' + dateText + '</div>' +
+            '<div class="my-order-total">$' + order.total.toFixed(2) + '</div>' +
+            '</div>' +
+            '</div>';
+    }).join('');
+}
+
+// Show order details in track section
+function showOrderDetails(orderId) {
+    document.getElementById('orderInput').value = orderId;
+    trackOrder();
+    window.scrollTo(0, 0);
 }
 
 // Search & Filter
@@ -499,25 +838,45 @@ function renderAdminOrders() {
     const container = document.getElementById('adminOrdersList');
     if (!container) return;
 
+    if (orders.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 2rem;">لا توجد طلبات</p>';
+        return;
+    }
+
     container.innerHTML = orders.map(function(order) {
+        var statusClass = order.status === 'delivered' ? 'delivered' : (order.status === 'shipped' ? 'shipped' : (order.status === 'rejected' ? 'rejected' : 'processing'));
         return '<div class="admin-order-item">' +
             '<div class="order-header">' +
             '<div>' +
             '<div style="font-weight: 600;">' + order.id + '</div>' +
             '<div style="color: var(--text-secondary); font-size: 0.9rem;">' + order.customer + '</div>' +
+            '<div style="font-size: 0.8rem; margin-top: 0.3rem;">' + order.phone + '</div>' +
+            '<div style="font-size: 0.8rem; color: var(--text-secondary);">' + order.address + '</div>' +
             '</div>' +
             '<div style="text-align: left;">' +
             '<div style="color: var(--accent); font-weight: 600;">$' + order.total.toFixed(2) + '</div>' +
-            '<select class="update-status" onchange="updateOrderStatus(\'' + order.id + '\', this.value)">' +
+            '<select class="update-status" onchange="updateOrderStatus(\'' + order.id + '\', this.value)" style="margin-bottom: 0.5rem;">' +
             '<option value="processing" ' + (order.status === 'processing' ? 'selected' : '') + '>قيد التجهيز</option>' +
             '<option value="shipped" ' + (order.status === 'shipped' ? 'selected' : '') + '>في الطريق</option>' +
             '<option value="delivered" ' + (order.status === 'delivered' ? 'selected' : '') + '>تم التوصيل</option>' +
+            '<option value="rejected" ' + (order.status === 'rejected' ? 'selected' : '') + '>مرفوض</option>' +
             '</select>' +
+            '<button class="delete-btn" style="padding: 0.3rem 0.6rem; font-size: 0.7rem;" onclick="deleteOrder(\'' + order.id + '\')">حذف</button>' +
             '</div>' +
             '</div>' +
             '<div class="order-items-list">' + order.items.join(', ') + '</div>' +
             '</div>';
     }).join('');
+}
+
+function deleteOrder(orderId) {
+    if (confirm('هل أنت متأكد من حذف هذا الطلب؟')) {
+        orders = orders.filter(function(o) { return o.id !== orderId; });
+        saveToStorage();
+        renderAdminOrders();
+        updateStats();
+        showNotification('تم حذف الطلب');
+    }
 }
 
 function addProduct() {
@@ -581,6 +940,15 @@ function updateOrderStatus(orderId, status) {
     if (order) {
         order.status = status;
         saveToStorage();
+
+        // Update the badge immediately in UI
+        var badges = document.querySelectorAll('[data-order-id="' + orderId + '"]');
+        var statusBadge = document.querySelector('#orderStatusBadge[data-order-id="' + orderId + '"]');
+        if (statusBadge) {
+            statusBadge.textContent = getStatusText(status);
+            statusBadge.className = 'status-badge ' + status;
+        }
+
         showNotification('تم تحديث حالة الطلب إلى ' + getStatusText(status));
     }
 }
@@ -595,18 +963,26 @@ function closeAuth() {
 }
 
 function switchAuthMode() {
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const authTitle = document.getElementById('authTitle');
+    var loginForm = document.getElementById('loginForm');
+    var registerForm = document.getElementById('registerForm');
+    var authTitle = document.getElementById('authTitle');
 
     if (loginForm.classList.contains('hidden')) {
         loginForm.classList.remove('hidden');
         registerForm.classList.add('hidden');
         authTitle.textContent = 'تسجيل الدخول';
+        // Reset login form
+        document.getElementById('loginIdentifier').value = '';
+        document.getElementById('loginPassword').value = '';
     } else {
         loginForm.classList.add('hidden');
         registerForm.classList.remove('hidden');
         authTitle.textContent = 'إنشاء حساب';
+        // Reset register form
+        document.getElementById('regName').value = '';
+        document.getElementById('regEmail').value = '';
+        document.getElementById('regPhone').value = '';
+        document.getElementById('regPassword').value = '';
     }
 }
 
@@ -614,31 +990,144 @@ function showForgotPassword() {
     showNotification('يرجى التواصل مع المسؤول لإعادة تعيين كلمة المرور', true);
 }
 
-function handleLogin(e) {
-    e.preventDefault();
-    const email = e.target.querySelector('input[type="email"]').value;
-    const password = e.target.querySelector('input[type="password"]').value;
-
-    currentUser = { email: email, name: email.split('@')[0] };
+function loginWithGoogle() {
+    // Note: Requires Google OAuth setup
+    showNotification('جاري تسجيل الدخول عبر Google...', false);
+    // Simulated Google login - in production, use Google Identity Services
+    currentUser = { name: 'مستخدم Google', loginMethod: 'google', email: 'user@gmail.com' };
     users.push(currentUser);
     saveToStorage();
-
+    updateUIForLoggedInUser();
     closeAuth();
-    showNotification('مرحباً ' + currentUser.name + '!');
+    showPage('home');
+    showNotification('مرحباً، تم تسجيل الدخول عبر Google!');
 }
 
-function handleRegister(e) {
-    e.preventDefault();
-    const formData = e.target.querySelectorAll('input');
-    const name = formData[0].value;
-    const email = formData[1].value;
-
-    currentUser = { name: name, email: email };
+function loginWithApple() {
+    // Note: Requires Apple OAuth setup
+    showNotification('جاري تسجيل الدخول عبر Apple...', false);
+    // Simulated Apple login - in production, use Sign in with Apple
+    currentUser = { name: 'مستخدم Apple', loginMethod: 'apple', email: 'user@icloud.com' };
     users.push(currentUser);
     saveToStorage();
-
+    updateUIForLoggedInUser();
     closeAuth();
-    showNotification('مرحباً ' + name + '! تم إنشاء حسابك بنجاح');
+    showPage('home');
+    showNotification('مرحباً، تم تسجيل الدخول عبر Apple!');
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    identifier = document.getElementById('loginIdentifier').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!identifier || !password) {
+        showNotification('يرجى إدخال اسم المستخدم وكلمة المرور', true);
+        return;
+    }
+
+    // Clean identifier (remove spaces/dashes from phone)
+    var identifierClean = identifier.replace(/[\s\-]/g, '');
+
+    // Try Firebase login first if available (only for email)
+    if (isFirebaseReady() && identifierClean.includes('@')) {
+        firebaseLogin(identifierClean, password);
+        return;
+    }
+
+    // Local storage validation - check by email, phone, or username
+    var existingUser = users.find(function(u) {
+        var emailMatch = u.email && u.email.toLowerCase() === identifierClean.toLowerCase();
+        var phoneMatch = u.phone && u.phone === identifierClean;
+        var nameMatch = u.name && u.name.toLowerCase() === identifierClean.toLowerCase();
+        return emailMatch || phoneMatch || nameMatch;
+    });
+
+    if (!existingUser) {
+        showNotification('الحساب غير موجود. يرجى إنشاء حساب أولاً', true);
+        switchAuthMode();
+        return;
+    }
+
+    if (existingUser.banned) {
+        showNotification('هذا الحساب محظور. يرجى التواصل مع الإدارة', true);
+        return;
+    }
+
+    if (existingUser.password && existingUser.password !== password) {
+        showNotification('كلمة المرور غير صحيحة', true);
+        return;
+    }
+
+    currentUser = existingUser;
+    saveToStorage();
+    updateUIForLoggedInUser();
+    closeAuth();
+    showPage('home');
+    showNotification('مرحباً، ' + (currentUser.name || currentUser.email || currentUser.phone) + '!');
+}
+
+// Simple Registration
+function handleRegister(e) {
+    e.preventDefault();
+    var name = document.getElementById('regName').value.trim();
+    var email = document.getElementById('regEmail').value.trim();
+    var phone = document.getElementById('regPhone').value.trim();
+    var password = document.getElementById('regPassword').value;
+
+    // Validation
+    if (!name) {
+        showNotification('يرجى إدخال اسم المستخدم', true);
+        return;
+    }
+
+    if (!email && !phone) {
+        showNotification('يرجى إدخال البريد الإلكتروني أو رقم الهاتف', true);
+        return;
+    }
+
+    if (password.length < 6) {
+        showNotification('كلمة المرور يجب أن تكون 6 أحرف على الأقل', true);
+        return;
+    }
+
+    // Clean phone if provided
+    var phoneClean = phone ? phone.replace(/[\s\-]/g, '') : null;
+
+    // Check if user already exists
+    var existingUser = users.find(function(u) {
+        var emailMatch = email && u.email && u.email.toLowerCase() === email.toLowerCase();
+        var phoneMatch = phoneClean && u.phone && u.phone === phoneClean;
+        var nameMatch = u.name && u.name.toLowerCase() === name.toLowerCase();
+        return emailMatch || phoneMatch || nameMatch;
+    });
+
+    if (existingUser) {
+        showNotification('هذا الحساب موجود بالفعل', true);
+        return;
+    }
+
+    // Try Firebase registration first if available (only with email)
+    if (isFirebaseReady() && email) {
+        firebaseRegister(name, email, password, phoneClean || '');
+        return;
+    }
+
+    // Fall back to local registration
+    currentUser = {
+        name: name,
+        email: email || null,
+        phone: phoneClean || null,
+        password: password,
+        loginMethod: 'local',
+        createdAt: new Date().toISOString()
+    };
+    users.push(currentUser);
+    saveToStorage();
+    updateUIForLoggedInUser();
+    closeAuth();
+    showPage('home');
+    showNotification('تم إنشاء حسابك بنجاح! مرحباً، ' + currentUser.name + '!');
 }
 
 // Reviews Functions
